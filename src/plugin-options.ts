@@ -1,0 +1,20 @@
+export type PluginOptions = {
+  builtIns: string[];
+  contextToCustomElements: boolean;
+  delegateEvents: boolean;
+  delegatedEvents: Set<string>;
+  effectWrapper: string;
+  generate: string;
+  hydratable: boolean;
+  inlineStyles: boolean;
+  memoWrapper: string;
+  moduleName: string;
+  omitLastClosingTag: boolean;
+  omitNestedClosingTags: boolean;
+  omitQuotes: boolean;
+  renderers: string;
+  requireImportSource: boolean;
+  staticMarker: string;
+  validate: boolean;
+  wrapConditionals: boolean;
+};
