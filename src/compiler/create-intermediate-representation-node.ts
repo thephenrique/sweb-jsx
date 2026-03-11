@@ -1,11 +1,4 @@
 import type { NodePath } from "@babel/core";
-import {
-  isJSXElement,
-  isJSXExpressionContainer,
-  isJSXFragment,
-  isJSXSpreadChild,
-  isJSXText,
-} from "@babel/types";
 
 import { getPluginOptions, type PluginState } from "../plugin-state";
 import { createElementIRNode } from "./create-element-ir-node";
@@ -28,23 +21,23 @@ export function createIntermediateRepresentationNode(
 ): IntermediateRepresentationNode {
   getPluginOptions(state);
 
-  if (isJSXElement(path.node)) {
-    return createElementIRNode();
+  if (path.isJSXElement()) {
+    return createElementIRNode(path);
   }
 
-  if (isJSXFragment(path.node)) {
+  if (path.isJSXFragment()) {
     return createFragmentIRNode();
   }
 
-  if (isJSXText(path.node)) {
+  if (path.isJSXText()) {
     return createTextIRNode();
   }
 
-  if (isJSXExpressionContainer(path.node)) {
+  if (path.isJSXExpressionContainer()) {
     return createExpressionContainerIRNode();
   }
 
-  if (isJSXSpreadChild(path.node)) {
+  if (path.isJSXSpreadChild()) {
     return createSpreadChildIRNode();
   }
 
