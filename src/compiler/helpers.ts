@@ -1,14 +1,58 @@
 import type { NodePath } from "@babel/core";
-import { booleanLiteral, numericLiteral, stringLiteral } from "@babel/types";
+import {
+  booleanLiteral,
+  numericLiteral,
+  stringLiteral,
+  type JSXElement,
+  type JSXIdentifier,
+  type JSXMemberExpression,
+  type JSXNamespacedName,
+} from "@babel/types";
 
 // Helper.
 export function isComponentElement(_elementName: string): boolean {
   return true;
 }
 
-// Helper.
-export function getElementName(): string {
-  return "";
+/**
+ * Returns the element tag name from JSX node.
+ *
+ * Handles JSX Identifiers and NamespacedNames directly, and
+ * recursively descends through JSX MemberExpressions to build
+ * their full string representation.
+ *
+ * Important to normalize element names into a single string form
+ * for later element classification and transform decisions.
+ *
+ * Examples:
+ * - <div /> -> "div"
+ * - <MyComponent /> -> "MyComponent"
+ * - <Foo.Bar.Baz /> -> "Foo.Bar.Baz"
+ * - <svg:path /> -> "svg:path"
+ */
+export function getElementTagName(path: NodePath<JSXElement>): string {
+  return getElementTagNameHelper(path.get("openingElement").get("name"));
+}
+
+function getElementTagNameHelper(
+  path: NodePath<JSXIdentifier | JSXMemberExpression | JSXNamespacedName>,
+): string {
+  if (path.isJSXIdentifier() || path.isIdentifier()) {
+    // Ex.: <div /> -> "div"
+    return path.node.name;
+  }
+
+  if (path.isJSXMemberExpression()) {
+    // Ex.: <Foo.Bar.Baz /> -> "Foo.Bar.Baz"
+    return `${getElementTagNameHelper(path.get("object"))}.${path.node.property.name}`;
+  }
+
+  if (path.isJSXNamespacedName()) {
+    // Ex.: <svg:path /> -> "svg:path"
+    return `${path.node.namespace.name}:${path.node.name.name}`;
+  }
+
+  throw new Error("Unsupported element tag name");
 }
 
 /**
