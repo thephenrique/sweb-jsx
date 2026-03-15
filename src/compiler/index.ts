@@ -1,13 +1,24 @@
 import type { NodePath } from "@babel/core";
-import { isJSXFragment, type JSXElement, type JSXFragment } from "@babel/types";
+import {
+  addComment,
+  callExpression,
+  templateElement,
+  templateLiteral,
+  variableDeclaration,
+  variableDeclarator,
+  type JSXElement,
+  type JSXFragment,
+  type Program,
+} from "@babel/types";
 
 import type { PluginState } from "../plugin-state";
 import { createIntermediateRepresentationNode } from "./create-intermediate-representation-node";
 import { createReplacementNode } from "./create-replacement-node";
+import { cacheImport, escapeForTemplateLiteral, getTemplatesCache } from "./helpers";
 
 /**
- * Entry point.
  * Compiles a single JSX node to JavaScript.
+ *
  * It is called for each instance of JSXElement or JSXFragment found in the AST provided by Babel.
  */
 export function compileJSXNode(path: NodePath<JSXElement | JSXFragment>, state: PluginState): void {
@@ -15,14 +26,36 @@ export function compileJSXNode(path: NodePath<JSXElement | JSXFragment>, state: 
     return;
   }
 
-  const irNode = createIntermediateRepresentationNode(
-    path,
-    state,
-    isJSXFragment(path.node) ? {} : { isTopLevel: true, isLastElement: true },
+  path.replaceWith(
+    createReplacementNode(path, state, createIntermediateRepresentationNode(path, state)),
   );
 
-  /* const replacementNode = */ createReplacementNode(path, state, irNode);
-  // path.replaceWith(replacementNode);
-
   // TODO: Clean up `@once`.
+}
+
+export function handlePluginExit(path: NodePath<Program>, state: PluginState): void {
+  if (state.skipCompilation) {
+    return;
+  }
+
+  const templatesCache = getTemplatesCache(path);
+
+  if (templatesCache.length === 0) {
+    return;
+  }
+
+  const variables = templatesCache.map((template) => {
+    const namedImportIdentifier = cacheImport(path, "makeTemplateCreator");
+    const htmlContent = templateLiteral(
+      [templateElement({ raw: escapeForTemplateLiteral(template.htmlContent) })],
+      [],
+    );
+
+    return variableDeclarator(
+      template.identifier,
+      addComment(callExpression(namedImportIdentifier, [htmlContent]), "leading", "#__PURE__"),
+    );
+  });
+
+  path.node.body.unshift(variableDeclaration("var", variables));
 }

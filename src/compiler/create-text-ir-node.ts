@@ -2,5 +2,5 @@ import type { IntermediateRepresentationNode } from "./types";
 
 // Creator.
 export function createTextIRNode(): IntermediateRepresentationNode {
-  return {};
+  throw new Error("Not implemented");
 }

@@ -1,33 +1,32 @@
 import type { NodePath } from "@babel/core";
 import { type JSXElement } from "@babel/types";
 
-import { foldConstantToLiteral, getElementName, isComponentElement } from "./helpers";
+import { getElementName, isComponentElement } from "./helpers";
 import type { IntermediateRepresentationNode } from "./types";
 
 // Orchestrator.
 export function createElementIRNode(path: NodePath<JSXElement>): IntermediateRepresentationNode {
-  return isComponentElement(getElementName())
+  return isComponentElement(getElementName(path))
     ? createComponentElementIRNode()
-    : createDOMElementIRNode(path);
+    : createHtmlElementIRNode(path);
 }
 
 // Creator.
 function createComponentElementIRNode(): IntermediateRepresentationNode {
-  return {};
+  throw new Error("Not Implemented");
 }
 
 // Creator.
-function createDOMElementIRNode(path: NodePath<JSXElement>): IntermediateRepresentationNode {
-  path
-    .get("openingElement")
-    .get("attributes")
-    .forEach((attribute) => {
-      if (!attribute.isJSXAttribute()) {
-        return;
-      }
+function createHtmlElementIRNode(path: NodePath<JSXElement>): IntermediateRepresentationNode {
+  const elementName = getElementName(path);
 
-      foldConstantToLiteral(attribute.get("value") as NodePath);
-    });
+  const irNode: IntermediateRepresentationNode = {
+    identifier: path.scope.generateUidIdentifier("element"),
 
-  return {};
+    htmlContent: `<${elementName}>`,
+
+    variables: [],
+  };
+
+  return irNode;
 }

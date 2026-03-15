@@ -1,7 +1,7 @@
 import type { PluginObj } from "@babel/core";
 import SyntaxJSX from "@babel/plugin-syntax-jsx";
 
-import { compileJSXNode } from "./compiler";
+import { compileJSXNode, handlePluginExit } from "./compiler";
 import type { PluginState } from "./plugin-state";
 
 function plugin(): PluginObj<PluginState> {
@@ -9,12 +9,12 @@ function plugin(): PluginObj<PluginState> {
     name: "sweb-jsx",
     inherits: SyntaxJSX.default,
     visitor: {
+      Program: {
+        enter: () => {},
+        exit: handlePluginExit,
+      },
       JSXElement: compileJSXNode,
       JSXFragment: compileJSXNode,
-      // Program: {
-      //   enter: () => {},
-      //   exit: () => {},
-      // },
     },
   };
 }

@@ -1,7 +1,16 @@
 import type { NodePath } from "@babel/core";
-import type { JSXElement, JSXFragment } from "@babel/types";
+import {
+  callExpression,
+  variableDeclaration,
+  variableDeclarator,
+  type Identifier,
+  type JSXElement,
+  type JSXFragment,
+  type Node,
+} from "@babel/types";
 
 import type { PluginState } from "../plugin-state";
+import { cacheTemplate } from "./helpers";
 import type { IntermediateRepresentationNode } from "./types";
 
 /**
@@ -9,9 +18,27 @@ import type { IntermediateRepresentationNode } from "./types";
  * from the intermediate representation.
  */
 export function createReplacementNode(
-  _path: NodePath<JSXElement | JSXFragment>,
+  path: NodePath<JSXElement | JSXFragment>,
   _state: PluginState,
-  _irNode: IntermediateRepresentationNode,
-): NodePath {
-  throw new Error();
+  irNode: IntermediateRepresentationNode,
+): Node {
+  handleTemplate(path, irNode);
+
+  return irNode.variables[0]!.init!;
+}
+
+function handleTemplate(
+  path: NodePath<JSXElement | JSXFragment>,
+  irNode: IntermediateRepresentationNode,
+) {
+  const templateCreatorFnIdentifier = cacheTemplate(path, irNode);
+  declareTemplateCreatorFn(templateCreatorFnIdentifier, irNode);
+}
+
+function declareTemplateCreatorFn(
+  fnIdentifier: Identifier,
+  irNode: IntermediateRepresentationNode,
+) {
+  irNode.variableDeclaration = variableDeclaration("var", irNode.variables);
+  irNode.variables.unshift(variableDeclarator(irNode.identifier, callExpression(fnIdentifier, [])));
 }

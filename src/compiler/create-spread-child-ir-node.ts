@@ -2,5 +2,5 @@ import type { IntermediateRepresentationNode } from "./types";
 
 // Creator.
 export function createSpreadChildIRNode(): IntermediateRepresentationNode {
-  return {};
+  throw new Error("Not implemented");
 }
